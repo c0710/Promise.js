@@ -1,6 +1,19 @@
 var log = console.log
 
+function isFunction(func) {
+    return typeof func === 'function';
+}
+function isObject(obj) {
+    return typeof obj === 'object';
+}
+function isArray(arr) {
+    return Object.prototype.toString.call(arr) === '[object Array]';
+}
+
 function P (fn) {
+  if (!isFunction(fn)) {
+    throw new TypeError('fn must be a function!')
+  }
   // 储存成功时的回调
   var doneList = []
   var state = 'pending'
@@ -46,6 +59,7 @@ function P (fn) {
     state = 'fulfilled'
     var value = newValue
     setTimeout(function () {
+      // 当resolve时，开始遍历储存在doneList里的函数
       doneList.forEach(function (fulfill) {
         var tmp = fulfill(value)
         if (value instanceof Promise) {
@@ -62,27 +76,4 @@ function P (fn) {
 
   fn(resolve)
 }
-
-var p = new P(function (resolve) {
-  setTimeout(function () {
-    resolve('from p')
-  }, 1000);
-  // resolve()
-});
-var p2 = function () {
-  return  new P(function (resolve) {
-    setTimeout(function (args) {
-      resolve('inner Promise')
-    }, 2000)
-  })
-}
-p
-  .then(function (data) {
-    console.log('111', data)
-    return 'aaa'
-  })
-  .then(p2)
-  .then(function (data) {
-    console.log('2222', data)
-  })
 

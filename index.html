@@ -7,5 +7,32 @@
 <body>
 hello
 <script src="index.js"></script>
+<script>
+    var p1 = new P(function (resolve) {
+        setTimeout(function () {
+            resolve('from p')
+        }, 1000);
+    });
+    var p2 = function (data) {
+        return  new P(function (resolve) {
+            setTimeout(function () {
+                console.log('entry the 2 then with params', data)
+                resolve('inner Promise')
+            }, 2000)
+        })
+    }
+
+
+    p1
+        .then(function (data) {
+            console.log('entry the 1 then with params', data)
+            return 'aaa'
+        })
+        .then(p2)
+        .then(function (data) {
+            console.log('entry the 3 then with params', data)
+        })
+
+</script>
 </body>
 </html>
