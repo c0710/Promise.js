@@ -1,79 +1,99 @@
 var log = console.log
 
-function isFunction(func) {
+function isFunction (func) {
     return typeof func === 'function';
 }
-function isObject(obj) {
+
+function isObject (obj) {
     return typeof obj === 'object';
 }
-function isArray(arr) {
+
+function isArray (arr) {
     return Object.prototype.toString.call(arr) === '[object Array]';
 }
 
-function P (fn) {
-  if (!isFunction(fn)) {
-    throw new TypeError('fn must be a function!')
-  }
-  // 储存成功时的回调
-  var doneList = []
-  var state = 'pending'
-  var value = null
-  /**
-   * then() 方法返回一个  Promise 它最多需要有两个参数：Promise的成功和失败情况的回调函数。
-   *
-   * @param onResolved 已完成回调函数
-   * @param onRejected 已失败回调函数
-   * @return {Promise}
-   */
-  this.then = function (onResolved, onRejected) {
-    switch (state) {
-      case 'pending':
-        doneList.push(onResolved)
-        return this
-      case 'fulfilled':
-        onResolved()
-        return this
+function P (executor) {
+    if (!isFunction(executor)) {
+        throw new TypeError('fn must be a function!')
     }
-  }
+    var self = this
+    self.onResolvedCallback = []   // 储存成功时的回调
+    self.onRejectedCallback = []   // 储存失败时的回调
+    self.status = 'pending'         // Promise当前的状态
+    self.value = null              // Promise当前的值
 
-  function handle (cb) {
-    if (state === 'pending') {
-      doneList.push(cb)
-      return
-    }
-    // 若then中没有传递任何东西
-    if (!cb.onFulfilled) {
-      cb.resolve(value)
-      return
-    }
-    //
-    var ret = cb.onFulfilled(value)
-    cb.resolve(ret)
-  }
-
-  /**
-   *  如果fn(promise接受的函数)是同步函数的话，resolve就会在then之前执行，此时doneList还是空的
-   *  所以用setTimeout使其成为异步函数
-   * */
-  function resolve (newValue) {
-    state = 'fulfilled'
-    var value = newValue
-    setTimeout(function () {
-      // 当resolve时，开始遍历储存在doneList里的函数
-      doneList.forEach(function (fulfill) {
-        var tmp = fulfill(value)
-        if (value instanceof Promise) {
-          var newP = tmp
-          for (i++; i < doneList.length; i++) {
-            newP.then(doneList[i]);
-          }
-        } else {
-          value = tmp
+    function resolve (val) {
+        if (self.status === 'pending') {
+            self.status = 'fulfilled'
+            self.value = val
+            for (var i = 0; i < self.onResolvedCallback.length; i++) {
+                self.onResolvedCallback[i](value)
+            }
         }
-      })
-    }, 0)
-  }
+    }
 
-  fn(resolve)
+    function reject (reson) {
+        if (self.status === 'pending') {
+            self.status = 'rejected'
+            self.value = reson
+            for (var i = 0; i < self.onRejectedCallback.length; i++) {
+                self.onRejectedCallback[i](reson)
+            }
+        }
+    }
+
+    // 如果executor本身执行时出错，则catch捕捉到错误后reject
+    // 因为resolve,reject都是在executor内部调用，所以用bind绑定后再传给executor
+    try {
+        executor(resolve.bind(this), reject.bind(this))
+    } catch (err) {
+        reject.bind(this)
+    }
+}
+
+P.prototype.then = function (onResolved, onRejected) {
+    var self = this
+    var promise2
+    // 如果then的参数不是函数，则忽略
+    onResolved = isFunction(onResolved) ? onResolved : function (v) { return v}
+    onRejected = isFunction(onRejected) ? onRejected : function (e) { throw e}
+
+    /**
+     *  Promise共有三种状态，并且无论哪种状态都返回一个新的Promise
+     * */
+    if (self.status === 'fulfilled') {
+        return promise2 = new P(function(resolve, reject) {
+            try{
+                var x = onResolved(self.value)
+                // 如果onResolved的返回值是一个Promise对象，直接取它的结果做为promise2的结果
+                if(x instanceof P) {
+                    x.then(resolve, reject)
+                }
+                // 否则，以onResolved的返回值作为结果resolve出去
+                resolve(x)
+            }catch (e) {
+                reject(e)
+            }
+        })
+    }
+
+    if (self.status === 'rejected') {
+        return promise2 = new P(function(resolve, reject) {
+            try{
+                var x = onRejected(self.value)
+                if(x instanceof P) {
+                    x.then(resolve, reject)
+                }
+            }catch (e) {
+                reject(e)
+            }
+        })
+    }
+
+    if (self.status === 'pending') {
+        return promise2 = new P(function(resolve, reject) {
+            self.onResolvedCallback.push(onResolved)
+        })
+    }
 }
 
