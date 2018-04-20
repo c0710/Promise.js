@@ -8,19 +8,26 @@
 hello
 <script src="index.js"></script>
 <script>
-    // var p1 = new P(function (resolve) {
-    //     setTimeout(function () {
-    //         resolve('from p')
-    //     }, 1000);
-    // });
-    // var p2 = function (data) {
-    //     return  new P(function (resolve) {
-    //         setTimeout(function () {
-    //             console.log('entry the 2 then with params', data)
-    //             resolve('inner Promise')
-    //         }, 2000)
-    //     })
-    // }
+    var p1 = new P(function (resolve) {
+        setTimeout(function () {
+            resolve('from p')
+        }, 1000);
+    });
+    var p2 = function (data) {
+        log(data)
+        return  new Promise(function (resolve) {
+            setTimeout(function () {
+                console.log('entry the 2 then with params', data)
+                resolve('inner Promise')
+            }, 2000)
+        })
+    }
+    p1.then(function (data) {
+        console.log('get data from p1', data)
+        return data
+    }).then(p2).then(function (data) {
+        log('get data from Promise Object p2', data)
+    })
 
 
 
