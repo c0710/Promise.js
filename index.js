@@ -13,6 +13,7 @@ function isArray (arr) {
 }
 
 function P (executor) {
+    log('construct P')
     if (!isFunction(executor)) {
         throw new TypeError('fn must be a function!')
     }
@@ -23,11 +24,12 @@ function P (executor) {
     self.value = null              // Promise当前的值
 
     function resolve (val) {
+        console.log('执行resolve')
         if (self.status === 'pending') {
             self.status = 'fulfilled'
             self.value = val
             for (var i = 0; i < self.onResolvedCallback.length; i++) {
-                self.onResolvedCallback[i](value)
+                self.onResolvedCallback[i](self.value)
             }
         }
     }
@@ -37,7 +39,7 @@ function P (executor) {
             self.status = 'rejected'
             self.value = reson
             for (var i = 0; i < self.onRejectedCallback.length; i++) {
-                self.onRejectedCallback[i](reson)
+                self.onRejectedCallback[i](self.value)
             }
         }
     }
@@ -51,10 +53,11 @@ function P (executor) {
     }
 }
 
+// then 实现
 P.prototype.then = function (onResolved, onRejected) {
     var self = this
     var promise2
-    // 如果then的参数不是函数，则忽略
+    // 如果then的参数不是函数，默认直接resolve出接受到的value值或抛出错误
     onResolved = isFunction(onResolved) ? onResolved : function (v) { return v}
     onRejected = isFunction(onRejected) ? onRejected : function (e) { throw e}
 
@@ -92,8 +95,32 @@ P.prototype.then = function (onResolved, onRejected) {
 
     if (self.status === 'pending') {
         return promise2 = new P(function(resolve, reject) {
-            self.onResolvedCallback.push(onResolved)
+            self.onResolvedCallback.push(function (value) {
+                try{
+                    var x = onResolved(self.value)
+                    if (x instanceof P) {
+                        x.then(resolve, reject)
+                    }
+                } catch (e) {
+                    reject(e)
+                }
+            })
+            self.onRejectedCallback.push(function (value) {
+                try{
+                    var x = onRejected(self.value)
+                    if (x instanceof P) {
+                        x.then(resolve, reject)
+                    }
+                } catch (e) {
+                    reject(e)
+                }
+            })
         })
     }
+}
+
+// catch实现
+P.prototype.catch = function (onRejected) {
+    return this.then(null, onRejected)
 }
 
