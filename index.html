@@ -22,13 +22,13 @@ hello
             }, 2000)
         })
     }
-    p1.then(function (data) {
-        console.log('get data from p1', data)
-        return data
-    }).then(p2).then(function (data) {
-        log('get data from Promise Object p2', data)
+    console.log(P)
+    P.reject(4).then(function (data) {
+        console.log(data)
+    }).catch(function (err) {
+        console.log('err show')
+        console.log(err)
     })
-
 
 
 </script>

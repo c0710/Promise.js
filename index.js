@@ -118,6 +118,24 @@ P.prototype.catch = function (onRejected) {
     return this.then(null, onRejected)
 }
 
+// resolve实现
+P.resolve = function (resolver) {
+    if (resolver instanceof Promise) {
+        return resolver
+    } else {
+        return new P(function (resolve) {
+            resolve(resolver)
+        })
+    }
+}
+
+// reject实现
+P.reject = function (reson) {
+    return new P(function (resolve, reject) {
+        reject(reson)
+    })
+}
+
 /**
  * resolvePromise函数即为根据x的值来决定promise2的状态的函数
  * 也即标准中的[Promise Resolution Procedure](https://promisesaplus.com/#point-47)
