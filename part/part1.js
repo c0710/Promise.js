@@ -1,22 +1,26 @@
 var log = console.log;
 
 function P(fn) {
+    var state = 'pending';
     var value = null;
     var callbacks = []; // 存放请求成功的回调函数
 
     this.then = function (f) {
-        log('do then')
-        callbacks.push(f);
+        if (state === 'pending') {
+            callbacks.push(f);
+            return this
+        }
+        f(value);
         return this
     }
 
     // 当触发resolve时，将callbacks队列内的所有回调函数逐个执行
     // resolve接受一个参数，即异步操作所返回的值
     function resolve(newVal) {
-        log('do resolve')
+        value = newVal;
+        state = 'fulfilled';
         setTimeout(function () {
-            callbacks.forEach(function (cb, index) {
-                log('execute callback someThing' + (index+1))
+            callbacks.forEach(function (cb) {
                 cb(newVal)
             })
         }, 0)
