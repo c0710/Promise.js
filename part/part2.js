@@ -1,3 +1,4 @@
+
 var log = console.log;
 
 function P(fn) {
@@ -6,12 +7,27 @@ function P(fn) {
     var callbacks = []; // 存放请求成功的回调函数
 
     this.then = function (f) {
+        return new P(function (resolve) {
+            handle({
+                onFulfilled: f || null,
+                resolve: resolve
+            });
+        })
+    }
+
+    function handle(callback) {
         if (state === 'pending') {
-            callbacks.push(f);
-            return this
+            callbacks.push(callback);
+            return;
         }
-        f(value);
-        return this
+        //如果then中没有传递任何东西
+        if(!callback.onFulfilled) {
+            callback.resolve(value);
+            return;
+        }
+
+        var ret = callback.onFulfilled(value);
+        callback.resolve(ret);
     }
 
     // 当触发resolve时，将callbacks队列内的所有回调函数逐个执行
@@ -32,10 +48,19 @@ function P(fn) {
 function a() {
     return new P(function (resolve) {
         log('start')
-        // setTimeout(function () {
-        //     log('after 1s...')
-            resolve('hello')
-        // }, 1000)
+        setTimeout(function () {
+            log('after 1s...')
+        resolve(9)
+        }, 1000)
+    })
+}
+
+function anotherPromise(data) {
+    return new P(function (resolve) {
+        setTimeout(function () {
+            log('anotherPromise resolve')
+            resolve(data * 10)
+        }, 300)
     })
 }
 
@@ -50,4 +75,6 @@ function someThing2(value) {
 }
 
 var result = a().then(anotherPromise).then(someThing1).then(someThing2);
+
+
 
