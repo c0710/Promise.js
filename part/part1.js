@@ -21,6 +21,7 @@ function P(fn) {
         state = 'fulfilled';
         setTimeout(function () {
             callbacks.forEach(function (cb) {
+
                 cb(newVal)
             })
         }, 0)
