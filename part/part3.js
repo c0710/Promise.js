@@ -6,11 +6,13 @@ function P(fn) {
     var value = null;
     var callbacks = []; // 存放请求成功的回调函数
 
-    this.then = function (f) {
-        return new P(function (resolve) {
+    this.then = function (onFulfilled, onRejected) {
+        return new P(function (resolve, reject) {
             handle({
-                onFulfilled: f || null,
-                resolve: resolve
+                onFulfilled: onFulfilled || null,
+                onRejected: onRejected || null,
+                resolve: resolve,
+                reject: reject
             });
         })
     }
@@ -20,12 +22,17 @@ function P(fn) {
             callbacks.push(callback);
             return;
         }
-        //如果then中没有传递任何东西
+
+        var cb = state === 'fulfilled' ? callback.onFulfilled : callback.onRejected,
+            ret;
+        if (cb === null) {
+            cb = state === 'fulfilled' ? callback.resolve : callback.reject;
+        }
         if(!callback.onFulfilled) {
             callback.resolve(value);
             return;
         }
-        // 如果promise中的异步操作已经执行完成，则立即执行回调函数(resolve内调用时都是走这里)
+
         var ret = callback.onFulfilled(value);
         callback.resolve(ret);
     }
@@ -52,50 +59,9 @@ function P(fn) {
     fn(resolve)
 }
 
-function a() {
-    return new P(function (resolve) {
-        log('start')
-        setTimeout(function () {
-            log('after 1s...')
-        resolve(9)
-        }, 1000)
-    })
-}
-
-function anotherPromise(data) {
-    return new P(function (resolve) {
-        setTimeout(function () {
-            log('anotherPromise resolve')
-            resolve(data * 10)
-        }, 300)
-    })
-}
-
-function someThing1(value) {
-    log('This is something 1')
-    log('value=' + value)
-    return 666
-}
-
-function someThing2(value) {
-    log('This is something 2')
-    log('value=' + value)
-}
-
-// a().then(anotherPromise).then(someThing1).then(someThing2);
-
-
-/**
- *  start
- *  after 1s...
- *  anotherPromise resolve
- *  This is something 1
- *  value=90
- *  This is something 2
- *  value=666
- * */
 function getId() {
     return new P(function (resolve) {
+        log('get id...')
         setTimeout(function () {
             log('get id succ')
             resolve(7)
@@ -104,6 +70,7 @@ function getId() {
 }
 
 function getNameById(id) {
+    log('get name...')
     return new P(function (resolve) {
         setTimeout(function () {
             log('get name succ')
@@ -116,7 +83,7 @@ function sayName(name) {
     log('My name is ' + name)
 }
 getId()
-.then()
+.then(getNameById)
 .then(sayName)
 
 /**
