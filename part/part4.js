@@ -6,9 +6,9 @@
 var log = console.log;
 
 function P(fn) {
-    var state = 'pending';
-    var value = null;
-    var callbacks = []; // 存放请求成功的回调函数
+    var state = 'pending',
+        value = null,
+        callbacks = [];
 
     this.then = function (onFulfilled, onRejected) {
         return new P(function (resolve, reject) {
@@ -18,8 +18,8 @@ function P(fn) {
                 resolve: resolve,
                 reject: reject
             });
-        })
-    }
+        });
+    };
 
     function handle(callback) {
         if (state === 'pending') {
@@ -32,43 +32,41 @@ function P(fn) {
         if (cb === null) {
             cb = state === 'fulfilled' ? callback.resolve : callback.reject;
             cb(value);
-            return
+            return;
         }
-
         ret = cb(value);
         callback.resolve(ret);
     }
 
-    // 当触发resolve时，将callbacks队列内的所有回调函数逐个执行
-    // resolve接受一个参数，即异步操作所返回的值
-    function resolve(newVal) {
-        if (newVal && (typeof newVal === "object" || typeof newVal === "function")) {
-            var then = newVal.then;
-            if (typeof newVal.then === "function") {
-                then.call(newVal, resolve);
-                return
+    function resolve(newValue) {
+        if (newValue && (typeof newValue === 'object' || typeof newValue === 'function')) {
+            var then = newValue.then;
+            if (typeof then === 'function') {
+                then.call(newValue, resolve, reject);
+                return;
             }
         }
-        value = newVal;
         state = 'fulfilled';
-        execute()
+        value = newValue;
+        execute();
     }
 
-    function reject(errObj) {
+    function reject(reason) {
         state = 'rejected';
-        value = errObj;
-        execute()
+        value = reason;
+        execute();
     }
 
+    // 抽离resolve和reject公共部分
     function execute() {
         setTimeout(function () {
-            callbacks.forEach(function (cb) {
-                handle(cb)
-            })
-        }, 0)
+            callbacks.forEach(function (callback) {
+                handle(callback);
+            });
+        }, 0);
     }
 
-    fn(resolve, reject)
+    fn(resolve, reject);
 }
 
 function getId() {
