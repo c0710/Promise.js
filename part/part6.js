@@ -8,6 +8,9 @@ function P(fn) {
 
     this.then = function () {
         // ...
+        return new P(function(cb) {
+            
+        })
     };
 
     this.resolve = function (val) {
