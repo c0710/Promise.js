@@ -10,11 +10,16 @@ function P(fn) {
         // ...
     };
 
-    this.resolve = function () {
-        // ...
+    this.resolve = function (val) {
+        // 成功回调
+        this.state = 'fulfilled';
+        this.value = val;
+
     };
 
-    this.reject = function () {
-        // ...
+    this.reject = function (err) {
+        // 失败回调
+        this.state = 'rejected';
+        this.value = err;
     }
 }
