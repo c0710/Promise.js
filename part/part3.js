@@ -64,7 +64,9 @@ function getId() {
         log('get id...')
         setTimeout(function () {
             log('get id succ')
-            resolve(7)
+            resolve({value: 7,then: function () {
+                    console.log('empty')
+                }})
         }, 300)
     })
 }
@@ -74,7 +76,7 @@ function getNameById(id) {
     return new P(function (resolve) {
         setTimeout(function () {
             log('get name succ')
-            resolve('wang' + id)
+            resolve('wang' + id.value)
         }, 300)
     })
 }

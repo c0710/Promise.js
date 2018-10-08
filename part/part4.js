@@ -24,6 +24,7 @@ function P(fn) {
     function handle(callback) {
         if (state === 'pending') {
             callbacks.push(callback);
+            log('cb is push')
             return;
         }
 
@@ -59,6 +60,7 @@ function P(fn) {
 
     // 抽离resolve和reject公共部分
     function execute() {
+        log('execute')
         setTimeout(function () {
             callbacks.forEach(function (callback) {
                 handle(callback);
@@ -73,7 +75,7 @@ function getId() {
     return new P(function (resolve, reject) {
         log('get id...')
         setTimeout(function () {
-            log('get id err')
+            log('get id err');
             reject('getId occur err')
         }, 300)
     })
@@ -98,6 +100,7 @@ function sayErr(err) {
 getId()
     .then(getNameById, function (err) {
         log('111   ' +err)
+        debugger
     })
     .then(sayName, function (err) {
         log('222   ' +err)
