@@ -3,7 +3,7 @@ var P = require('./lib/index');
 
 /*
 function getId() {
-    return new Promise(function (resolve, reject) {
+    return new P(function (resolve, reject) {
         setTimeout(function () {
             console.log('get id.......');
             reject('id')
@@ -12,7 +12,7 @@ function getId() {
 }
 
 function getNameById(id) {
-    return new Promise(function (resolve, reject) {
+    return new P(function (resolve, reject) {
         setTimeout(function () {
             console.log('get name')
             resolve('wang' + id)
@@ -34,7 +34,7 @@ P.reject('cat').then(getId)
 */
 
 function async1() {
-    return new Promise(
+    return new P(
         (resolve, reject) => {
             console.log('async1 start');
             setTimeout(() => {
@@ -45,7 +45,7 @@ function async1() {
 }
 
 function async2() {
-    return new Promise(
+    return new P(
         (resolve, reject) => {
             console.log('async2 start');
             setTimeout(() => {
@@ -56,7 +56,7 @@ function async2() {
 }
 
 function async3() {
-    return new Promise(
+    return new P(
         (resolve, reject) => {
             console.log('async3 start');
             setTimeout(() => {
@@ -65,21 +65,34 @@ function async3() {
         }
     );
 }
+function sayHi() {
+    console.log('hi')
+}
+function sayHello() {
+    console.log('hello');
+}
+//
+// async1()
+//     .then(
+//         data => {
+//             console.log(data);
+//             return async2();
+//         })
+//     .then(
+//         data => {
+//             console.log(data);
+//             return async3();
+//         }
+//     )
+//     .then(
+//         data => {
+//             console.log(data);
+//         }
+//     );
 
-async1()
-    .then(
-        data => {
-            console.log(data);
-            return async2();
-        })
-    .then(
-        data => {
-            console.log(data);
-            return async3();
-        }
-    )
-    .then(
-        data => {
-            console.log(data);
-        }
-    );
+var p1 = P.resolve(async1()),
+    p2 = P.resolve(2),
+    p3 = P.resolve(3);
+P.all([p1, p2, p3]).then(function (results) {
+    console.log(results);  // [1, 2, 3]
+});
