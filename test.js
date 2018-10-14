@@ -90,9 +90,31 @@ function sayHello() {
 //         }
 //     );
 
-var p1 = P.resolve(async1()),
-    p2 = P.resolve(2),
-    p3 = P.resolve(3);
-P.all([p1, p2, p3]).then(function (results) {
-    console.log(results);  // [1, 2, 3]
-});
+var after1s = new P(function (resolve) {
+        setTimeout(function () {
+            resolve('after 1s')
+        }, 1000)
+    })
+
+var after2s = new P(function (resolve) {
+        setTimeout(function () {
+            resolve('after 2s')
+        }, 2000)
+    })
+
+
+var after3s = new P(function (resolve) {
+        setTimeout(function () {
+            resolve('after 3s')
+        }, 3000)
+    })
+
+
+// var p1 = P.resolve(async1()),
+//     p2 = P.resolve(2),
+//     p3 = P.resolve(3);
+
+
+P.race([after3s, after1s, after2s]).then(function (result) {
+    console.log('result is '+ result)
+})
